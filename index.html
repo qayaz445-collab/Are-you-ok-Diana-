@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Повідомлення</title>
+<style>
+  *{ box-sizing:border-box; margin:0; padding:0; }
+
+  :root{
+    --violet:#8b5cf6;
+    --pink:#ec4899;
+    --cyan:#22d3ee;
+  }
+
+  html,body{ height:100%; }
+
+  body{
+    background:#07060d;
+    font-family:"Segoe UI","Noto Sans","Helvetica Neue",Arial,sans-serif;
+    color:#eae6ff;
+    overflow:hidden;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:18px;
+    position:relative;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ================= ANIMATED BACKGROUND ================= */
+  .bg{
+    position:fixed;
+    inset:-25%;
+    z-index:0;
+    filter:blur(80px);
+    opacity:.75;
+    background:
+      radial-gradient(circle at 22% 28%, #7c3aed 0%, transparent 45%),
+      radial-gradient(circle at 78% 18%, #db2777 0%, transparent 45%),
+      radial-gradient(circle at 50% 88%, #0891b2 0%, transparent 45%);
+    animation:swirl 24s ease-in-out infinite alternate;
+    will-change:transform;
+  }
+
+  .bg.two{
+    opacity:.5;
+    filter:blur(110px);
+    background:
+      radial-gradient(circle at 70% 70%, #4f46e5 0%, transparent 50%),
+      radial-gradient(circle at 20% 80%, #be185d 0%, transparent 50%);
+    animation:swirl2 32s ease-in-out infinite alternate;
+  }
+
+  @keyframes swirl{
+    0%{ transform:scale(1) rotate(0deg); }
+    50%{ transform:scale(1.18) rotate(9deg); }
+    100%{ transform:scale(1.06) rotate(-9deg); }
+  }
+  @keyframes swirl2{
+    0%{ transform:scale(1.1) rotate(0deg) translate(0,0); }
+    50%{ transform:scale(1.25) rotate(-12deg) translate(-3%,2%); }
+    100%{ transform:scale(1.05) rotate(10deg) translate(3%,-2%); }
+  }
+
+  /* Subtle grid overlay */
+  .grid{
+    position:fixed; inset:0; z-index:1; pointer-events:none;
+    background-image:
+      linear-gradient(rgba(255,255,255,.028) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.028) 1px, transparent 1px);
+    background-size:46px 46px;
+    mask-image:radial-gradient(ellipse at center, #000 20%, transparent 78%);
+    -webkit-mask-image:radial-gradient(ellipse at center, #000 20%, transparent 78%);
+  }
+
+  /* ================= FLOATING PARTICLES ================= */
+  .particles{
+    position:fixed; inset:0; z-index:2;
+    pointer-events:none; overflow:hidden;
+  }
+  .particle{
+    position:absolute;
+    bottom:-12vh;
+    border-radius:50%;
+    animation-name:rise;
+    animation-timing-function:linear;
+    animation-iteration-count:infinite;
+    will-change:transform,opacity;
+  }
+  @keyframes rise{
+    0%   { transform:translate3d(0,0,0) scale(.6); opacity:0; }
+    12%  { opacity:.85; }
+    50%  { transform:translate3d(calc(var(--drift) * .5), -60vh, 0) scale(1); }
+    88%  { opacity:.45; }
+    100% { transform:translate3d(var(--drift), -125vh, 0) scale(.7); opacity:0; }
+  }
+
+  /* ================= READING PROGRESS ================= */
+  .progress{
+    position:fixed;
+    top:0; left:0; right:0;
+    height:3px;
+    background:rgba(255,255,255,.06);
+    z-index:20;
+  }
+  .progress-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg, var(--cyan), var(--violet), var(--pink));
+    box-shadow:0 0 14px rgba(139,92,246,.9);
+    transition:width .12s linear;
+    border-radius:0 4px 4px 0;
+  }
+
+  /* ================= CARD ================= */
+  .card{
+    position:relative;
+    z-index:5;
+    width:min(830px, 100%);
+    height:min(87vh, 920px);
+    border-radius:26px;
+    background:linear-gradient(160deg, rgba(30,23,52,.86), rgba(13,10,24,.92));
+    border:1px solid rgba(255,255,255,.10);
+    box-shadow:
+      0 34px 90px rgba(0,0,0,.65),
+      0 0 70px rgba(139,92,246,.16),
+      inset 0 1px 0 rgba(255,255,255,.08);
+    backdrop-filter:blur(20px);
+    -webkit-backdrop-filter:blur(20px);
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    animation:cardIn .9s cubic-bezier(.2,.8,.25,1) both;
+  }
+  @keyframes cardIn{
+    from{ opacity:0; transform:translateY(28px) scale(.97); }
+    to  { opacity:1; transform:none; }
+  }
+
+  /* glowing top edge */
+  .glow-line{
+    position:absolute;
+    top:0; left:8%; right:8%;
+    height:1px;
+    background:linear-gradient(90deg, transparent, rgba(167,139,250,.9), rgba(236,72,153,.9), transparent);
+    filter:blur(.4px);
+    animation:pulseLine 4.5s ease-in-out infinite;
+  }
+  @keyframes pulseLine{
+    0%,100%{ opacity:.45; }
+    50%    { opacity:1; }
+  }
+
+  /* ================= SCROLL AREA ================= */
+  .scroll{
+    flex:1;
+    overflow-y:auto;
+    overflow-x:hidden;
+    padding:42px 44px 110px;
+    scroll-behavior:smooth;
+    scrollbar-width:thin;
+    scrollbar-color:rgba(139,92,246,.85) rgba(255,255,255,.05);
+    overscroll-behavior:contain;
+    position:relative;
+  }
+
+  .scroll::-webkit-scrollbar{ width:10px; }
+  .scroll::-webkit-scrollbar-track{
+    background:rgba(255,255,255,.045);
+    border-radius:20px;
+    margin:14px 0;
+  }
+  .scroll::-webkit-scrollbar-thumb{
+    border-radius:20px;
+    background:linear-gradient(180deg, #22d3ee, #8b5cf6 45%, #ec4899);
+    border:2px solid rgba(10,8,18,.9);
+    box-shadow:0 0 12px rgba(139,92,246,.7);
+  }
+  .scroll::-webkit-scrollbar-thumb:hover{
+    background:linear-gradient(180deg, #67e8f9, #a78bfa 45%, #f472b6);
+  }
+
+  /* ================= TEXT ================= */
+  .scroll p{
+    font-size:1.03rem;
+    line-height:1.98;
+    letter-spacing:.2px;
+    color:rgba(233,229,255,.9);
+    margin-bottom:24px;
+    text-align:justify;
+    hyphens:auto;
+    -webkit-hyphens:auto;
+    border-radius:12px;
+    padding:2px 6px;
+    transition:color .35s ease, background .35s ease;
+  }
+  .scroll p:hover{
+    color:#ffffff;
+    background:rgba(255,255,255,.028);
+  }
+
+  /* first note line */
+  .scroll p.note{
+    font-size:.93rem;
+    font-style:italic;
+    line-height:1.75;
+    text-align:left;
+    color:rgba(198,188,240,.75);
+    border-left:3px solid rgba(139,92,246,.85);
+    padding:4px 0 4px 18px;
+    margin-bottom:34px;
+    background:linear-gradient(90deg, rgba(139,92,246,.10), transparent 70%);
+    border-radius:0 10px 10px 0;
+  }
+  .scroll p.note:hover{
+    color:rgba(220,214,255,.95);
+    background:linear-gradient(90deg, rgba(139,92,246,.16), transparent 70%);
+  }
+
+  /* numbered answers */
+  .scroll p.item{
+    text-align:left;
+    padding-left:20px;
+    border-left:2px dashed rgba(167,139,250,.28);
+    margin-left:6px;
+  }
+
+  /* ================= REVEAL ANIMATION ================= */
+  .reveal p{
+    opacity:0;
+    transform:translateY(22px);
+    transition:opacity .8s ease, transform .8s ease, color .35s ease, background .35s ease;
+  }
+  .reveal p.visible{
+    opacity:1;
+    transform:none;
+  }
+
+  /* ================= BOTTOM FADE ================= */
+  .fade{
+    position:absolute;
+    left:0; right:0; bottom:0;
+    height:90px;
+    pointer-events:none;
+    border-radius:0 0 26px 26px;
+    background:linear-gradient(to top, rgba(11,9,20,.97), rgba(11,9,20,.72) 45%, transparent);
+  }
+
+  /* ================= RESPONSIVE ================= */
+  @media (max-width:640px){
+    body{ padding:10px; }
+    .card{ height:92vh; border-radius:20px; }
+    .scroll{ padding:30px 20px 100px; }
+    .scroll p{
+      font-size:.97rem;
+      line-height:1.9;
+      text-align:left;
+    }
+    .scroll p.note{ font-size:.88rem; }
+    .scroll::-webkit-scrollbar{ width:6px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .bg,.bg.two,.glow-line,.particle{ animation:none !important; }
+    .reveal p{ opacity:1; transform:none; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="bg"></div>
+  <div class="bg two"></div>
+  <div class="grid"></div>
+  <div class="particles" id="particles"></div>
+
+  <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+
+  <div class="card">
+    <div class="glow-line"></div>
+
+    <div class="scroll" id="scroll">
+
+      <p class="note">Ось природний переклад твого повідомлення українською мовою (збережено весь зміст і сенс без змін, виправлено лише граматику та зроблено текст природнішим):</p>
+
+      <p>Давай поговоримо про той пазл, зображення якого ти мені надіслала. Ти надіслала мені це зображення рівно о 12:04 ночі. Прямо під зображенням ти написала мені це повідомлення: «I can’t solve it. 😫😭😭 By the way, Alex’s reels won’t open for me. 😭😭😭». Ти сама розповіла мені про рілси Алекса разом зі своїм пазлом, через що моя увага відволіклася, і я почав говорити про Алекса. Чи ти зробила це навмисно — я не знаю, яка причина. Я прочитав один-два запитання з пазла, а потім уже було дуже пізно, тому я пішов спати. Я подумав, що вранці розв’яжу і розповім тобі. Потім я пішов до школи, після повернення трохи відпочив і спробував розв’язати твій пазл. Запитання в цьому пазлі були дуже легкими, але пазл усе одно не розв’язувався. Потім я подумав: «Добре, спочатку зроблю домашнє завдання, а потім спокійно розв’яжу твій пазл». Після домашнього завдання я переписав твій пазл на аркуш і почав його розв’язувати. Не знаю чому, але мені було важко його розв’язати. Майже дві години я мучився, але пазл так і не розв’язався. Тоді я уважно проаналізував запитання і ще раз добре подивився на пазл. І тоді я зрозумів, що це насправді не пазл, а просто щось, щоб зіпсувати настрій. У цьому пазлі було 17 запитань, але місць для відповідей лише на 15. Чим більше ти читаєш ці запитання, тим більше помічаєш: який це предмет, у якому є числа? Звичайно, відповідь — математика. Але в пазлі з’являється слово з 5 літер, а в «math» лише 4 літери. Я пробував усі запитання і відповіді різними способами, але нічого не сходилося. Зрештою, це безглуздий пазл, який ніхто не може розв’язати.</p>
+
+      <p>Тепер я хочу поставити тобі кілька запитань. Я не хочу так говорити, але мені здається, що ти все це робиш навмисно. Ти сама в своєму повідомленні поєднала питання про пазл з розмовою про Алекса. Скажи мені, хто тобі це надіслав. І чи хочеш ти розповісти мені щось особливе про цей пазл, чого я не розумію. Щось точно є. За одну ніч здається, ніби все змінилося. Ти сердишся на мене через пазл, який навіть неможливо розв’язати.</p>
+
+      <p>По-друге, про історію Алекса я досі нічого не знаю.</p>
+
+      <p>По-третє, чому ти вранці говорила такі дивні речі, наприклад:</p>
+
+      <p class="item">1) Чому ти сказала, що я тобі не допомагаю розв’язувати пазл, але як тільки зайшла мова про Алекса, я одразу став активним і кинувся його рятувати.</p>
+
+      <p class="item">2) Чи будеш ти також заперечувати, що я тобі не пишу? Ти знаєш, скільки повідомлень я тобі надсилаю, і все одно казати, що я тобі не пишу — це неправильно. Так, один-два-три рази я був зайнятий. Але я ніколи не можу тебе забути.</p>
+
+      <p class="item">3) Що означають твої слова, що моє життя важливе для мене, а твоє — для тебе? Чи хочеш ти сказати, що ми більше не можемо спілкуватися одне з одним? Не знаю чому, але мій розум, почувши це, думає саме так. Потім ти кажеш, що я не твоя власність, і в такому тоні, ніби я знаю, що робитиму з історією наших чатів. Мені це здається дивним, і я нічого не розумію. Чесно кажучи, щось точно сталося, але я не можу зрозуміти, що саме. Я не хочу так говорити, але чи не з’явився у твоєму житті третій хлопець, через якого ти так себе поводиш? Не знаю, Діано, але після твоїх слів сьогодні я дуже хвилююся. Не знаю чому, але мені здається, що ти хочеш сказати мені, щоб я тримався подалі і не розмовляв з тобою. Якщо я в чомусь винен — пробач мені. Або якщо є якась причина — скажи прямо. Я не розумію, що мені тобі сказати. Якщо в тебе проблема саме з Алексом — скажи мені один раз, і я видалю його сторінку в Instagram. Скажи хоча б раз і подивися. У чому ж справа зрештою? Якщо заради збереження дружби з тобою мені доведеться навіть видалити сторінку Алекса в Instagram — мені зовсім не буде погано. І ще одне: чому ти сьогодні прибрала той фон із сердечками з чату (Alex) і (Laya)? Невже ти так сильно на мене сердишся? Я не знав. Чому стільки злості? Можеш тепер сказати мені, у чому ж насправді справа?</p>
+
+    </div>
+
+    <div class="fade"></div>
+  </div>
+
+<script>
+  /* ---------- Floating particles ---------- */
+  (function(){
+    const wrap = document.getElementById('particles');
+    const colors = ['rgba(167,139,250,', 'rgba(244,114,182,', 'rgba(103,232,249,'];
+    const total = window.innerWidth < 640 ? 20 : 44;
+
+    for (let i = 0; i < total; i++){
+      const p = document.createElement('span');
+      const size = (Math.random() * 3.6 + 1.4).toFixed(1);
+      const color = colors[Math.floor(Math.random() * colors.length)];
+
+      p.className = 'particle';
+      p.style.width = size + 'px';
+      p.style.height = size + 'px';
+      p.style.left = (Math.random() * 100) + '%';
+      p.style.background = color + '0.9)';
+      p.style.boxShadow = '0 0 ' + (size * 3.5) + 'px ' + color + '0.75)';
+      p.style.animationDuration = (Math.random() * 18 + 15) + 's';
+      p.style.animationDelay = (-Math.random() * 30) + 's';
+      p.style.setProperty('--drift', (Math.random() * 140 - 70).toFixed(0) + 'px');
+
+      wrap.appendChild(p);
+    }
+  })();
+
+  /* ---------- Scroll progress ---------- */
+  (function(){
+    const scroll = document.getElementById('scroll');
+    const fill = document.getElementById('progressFill');
+
+    function update(){
+      const max = scroll.scrollHeight - scroll.clientHeight;
+      const pct = max > 0 ? (scroll.scrollTop / max) * 100 : 0;
+      fill.style.width = pct + '%';
+    }
+
+    scroll.addEventListener('scroll', update, { passive:true });
+    window.addEventListener('resize', update);
+    update();
+  })();
+
+  /* ---------- Reveal on scroll ---------- */
+  (function(){
+    const scroll = document.getElementById('scroll');
+    const paras = scroll.querySelectorAll('p');
+
+    if (!('IntersectionObserver' in window)){
+      return; /* text stays visible */
+    }
+
+    scroll.classList.add('reveal');
+
+    const io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (entry.isIntersecting){
+          entry.target.classList.add('visible');
+          io.unobserve(entry.target);
+        }
+      });
+    }, {
+      root: scroll,
+      threshold: 0.08,
+      rootMargin: '0px 0px -40px 0px'
+    });
+
+    paras.forEach(function(p){ io.observe(p); });
+  })();
+</script>
+</body>
+</html>
